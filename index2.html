@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Expense Tracker 💖</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(135deg, #74ebd5, #9face6);
+      min-height: 100vh;
+    }
+
+    /* Weather box */
+    .weather {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: white;
+      padding: 12px 15px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      font-size: 14px;
+    }
+
+    .weather button {
+      margin-top: 8px;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* Main container */
+    .container {
+      max-width: 500px;
+      margin: 120px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 18px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    button {
+      flex: 1;
+      margin: 0 5px;
+      padding: 10px;
+      font-size: 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+    }
+
+    .add {
+      background: #28a745;
+    }
+
+    .spend {
+      background: #dc3545;
+    }
+
+    /* Stats cards */
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .card {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+    }
+
+    .card h3 {
+      margin: 5px 0;
+      font-size: 16px;
+    }
+
+    .card p {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .full {
+      grid-column: span 2;
+      background: #e9ecef;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Weather Section -->
+  <div class="weather">
+    <div id="weatherText">Loading weather...</div>
+    <button onclick="downloadWeather()">Download Excel</button>
+  </div>
+
+  <!-- Expense Tracker -->
+  <div class="container">
+    <h1>Expense Tracker 💖</h1>
+
+    <input type="number" id="amount" placeholder="Enter amount">
+
+    <div class="buttons">
+      <button class="add" onclick="addBalance()">Add Balance</button>
+      <button class="spend" onclick="spendAmount()">Spend</button>
+    </div>
+
+    <div class="stats">
+      <div class="card">
+        <h3>Spent Today</h3>
+        <p id="spentToday">₹0</p>
+      </div>
+
+      <div class="card">
+        <h3>Total Spent</h3>
+        <p id="totalSpent">₹0</p>
+      </div>
+
+      <div class="card full">
+        <h3>Remaining Balance</h3>
+        <p id="balance">₹0</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* -------- Expense Tracker Logic -------- */
+    let balance = 0;
+    let spentToday = 0;
+    let totalSpent = 0;
+
+    function addBalance() {
+      let amt = Number(document.getElementById("amount").value);
+      balance += amt;
+      updateUI();
+    }
+
+    function spendAmount() {
+      let amt = Number(document.getElementById("amount").value);
+      balance -= amt;
+      spentToday += amt;
+      totalSpent += amt;
+      updateUI();
+    }
+
+    function updateUI() {
+      document.getElementById("balance").innerText = "₹" + balance;
+      document.getElementById("spentToday").innerText = "₹" + spentToday;
+      document.getElementById("totalSpent").innerText = "₹" + totalSpent;
+    }
+
+    /* -------- Weather Logic -------- */
+    let weatherReport = "";
+
+    function getWeather() {
+      let city = "Coimbatore";
+      let apiKey = "b6303e52382d95fb30630ef2659af59e";
+
+      fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`)
+        .then(res => res.json())
+        .then(data => {
+          weatherReport =
+            "City,Temperature,Condition\n" +
+            city + "," +
+            data.main.temp + "," +
+            data.weather[0].description;
+
+          document.getElementById("weatherText").innerText =
+            city + " | " + data.main.temp + "°C";
+        });
+    }
+
+    getWeather();
+
+    function downloadWeather() {
+      let blob = new Blob([weatherReport], { type: "text/csv" });
+      let link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "weather_report.csv";
+      link.click();
+    }
+  </script>
+
+</body>
+</html>

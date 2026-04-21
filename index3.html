@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Full Screen Wallet & Expense Tracker</title>
+
+<style>
+:root{
+  --primary:#6366f1;
+  --success:#22c55e;
+  --danger:#ef4444;
+  --glass:rgba(255,255,255,0.65);
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html, body{
+  margin:0;
+  padding:0;
+  width:100vw;
+  height:100vh;
+}
+
+body{
+  font-family:"Segoe UI", Arial, sans-serif;
+  background:linear-gradient(135deg,#c7d2fe,#f1f5f9);
+  display:flex;
+  flex-direction:column;
+}
+
+/* WRAPPER – FULL SCREEN */
+.wrapper{
+  flex:1;
+  padding:24px;
+  display:flex;
+  flex-direction:column;
+  gap:24px;
+}
+
+/* TOP SECTION */
+.top{
+  display:grid;
+  grid-template-columns:3fr 1.2fr;
+  gap:24px;
+}
+
+/* WALLET */
+.wallet{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:20px;
+}
+
+.wallet-card{
+  background:var(--glass);
+  backdrop-filter:blur(16px);
+  border-radius:26px;
+  padding:24px;
+  box-shadow:0 18px 40px rgba(0,0,0,0.18);
+}
+
+.wallet-card h3{
+  margin:0;
+  font-size:15px;
+  opacity:0.7;
+}
+
+.wallet-card p{
+  margin-top:10px;
+  font-size:30px;
+  font-weight:700;
+}
+
+/* WEATHER */
+.weather{
+  background:linear-gradient(135deg,#3b82f6,#6366f1);
+  color:white;
+  border-radius:30px;
+  padding:28px;
+  box-shadow:0 20px 45px rgba(0,0,0,0.3);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.weather .temp{
+  font-size:40px;
+  font-weight:700;
+}
+
+.weather .emoji{
+  font-size:56px;
+}
+
+/* MAIN SECTION */
+.main{
+  flex:1;
+  display:grid;
+  grid-template-columns:1.2fr 2fr;
+  gap:24px;
+}
+
+/* CARDS */
+.card{
+  background:var(--glass);
+  backdrop-filter:blur(16px);
+  border-radius:30px;
+  padding:26px;
+  box-shadow:0 18px 40px rgba(0,0,0,0.18);
+  height:100%;
+}
+
+/* INPUTS */
+input, select{
+  width:100%;
+  padding:16px;
+  border-radius:16px;
+  border:1px solid #e5e7eb;
+  margin-bottom:14px;
+  font-size:16px;
+}
+
+/* BUTTONS */
+.buttons{
+  display:flex;
+  gap:16px;
+}
+
+button{
+  flex:1;
+  border:none;
+  padding:16px;
+  border-radius:18px;
+  font-size:16px;
+  font-weight:600;
+  cursor:pointer;
+  color:white;
+}
+
+.add{background:linear-gradient(135deg,#22c55e,#16a34a);}
+.spend{background:linear-gradient(135deg,#ef4444,#b91c1c);}
+
+/* HISTORY */
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th, td{
+  padding:14px;
+  border-bottom:1px solid #e5e7eb;
+  text-align:center;
+  font-size:15px;
+}
+
+th{
+  background:rgba(99,102,241,0.15);
+}
+
+.credit{color:var(--success);font-weight:600;}
+.debit{color:var(--danger);font-weight:600;}
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+
+  <!-- TOP -->
+  <div class="top">
+
+    <!-- WALLET -->
+    <div class="wallet">
+      <div class="wallet-card">
+        <h3>Wallet Amount</h3>
+        <p id="walletAmount">₹0</p>
+      </div>
+      <div class="wallet-card">
+        <h3>Total Spent</h3>
+        <p id="totalSpent">₹0</p>
+      </div>
+      <div class="wallet-card">
+        <h3>Current Balance</h3>
+        <p id="balance">₹0</p>
+      </div>
+    </div>
+
+    <!-- WEATHER -->
+    <div class="weather">
+      <div>
+        <div id="city"></div>
+        <div class="temp" id="temp">--°C</div>
+        <div id="desc"></div>
+      </div>
+      <div class="emoji" id="emoji">⛅</div>
+    </div>
+
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- LEFT -->
+    <div class="card">
+      <h3>New Transaction</h3>
+      <input type="number" id="amount" placeholder="Enter amount">
+      <select id="category">
+        <option>Food</option>
+        <option>Travel</option>
+        <option>Bills</option>
+        <option>Shopping</option>
+        <option>Others</option>
+      </select>
+      <div class="buttons">
+        <button class="add" onclick="addMoney()">Add</button>
+        <button class="spend" onclick="spendMoney()">Spend</button>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="card">
+      <h3>Transaction History</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Category</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody id="history"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+let wallet=0, spent=0, balanceAmt=0, transactions=[];
+const API_KEY="b6303e52382d95fb30630ef2659af59e";
+
+/* MONEY */
+function addMoney(){
+  let a=+amount.value;if(a<=0)return;
+  wallet+=a; balanceAmt+=a;
+  addHistory("Credit",a);
+}
+
+function spendMoney(){
+  let a=+amount.value;if(a<=0||a>balanceAmt)return;
+  spent+=a; balanceAmt-=a;
+  addHistory("Debit",a);
+}
+
+function addHistory(type,amt){
+  transactions.unshift({date:new Date().toLocaleString(),type,cat:category.value,amt});
+  updateUI(); render();
+}
+
+function updateUI(){
+  walletAmount.innerText="₹"+wallet;
+  totalSpent.innerText="₹"+spent;
+  balance.innerText="₹"+balanceAmt;
+}
+
+function render(){
+  history.innerHTML="";
+  transactions.forEach(t=>{
+    history.innerHTML+=`
+      <tr>
+        <td>${t.date}</td>
+        <td class="${t.type==="Credit"?"credit":"debit"}">${t.type}</td>
+        <td>${t.cat}</td>
+        <td>₹${t.amt}</td>
+      </tr>`;
+  });
+}
+
+/* WEATHER */
+function weatherEmoji(main){
+  if(main==="Clear")return "☀️";
+  if(main==="Clouds")return "☁️";
+  if(main==="Rain")return "🌧️";
+  if(main==="Thunderstorm")return "⛈️";
+  if(main==="Snow")return "❄️";
+  return "🌫️";
+}
+
+fetch(`https://api.openweathermap.org/data/2.5/weather?q=Chennai&units=metric&appid=${API_KEY}`)
+.then(r=>r.json())
+.then(d=>{
+  city.innerText="Coimbatore";
+  temp.innerText=d.main.temp+"°C";
+  desc.innerText=d.weather[0].description;
+  emoji.innerText=weatherEmoji(d.weather[0].main);
+});
+</script>
+
+</body>
+</html>
